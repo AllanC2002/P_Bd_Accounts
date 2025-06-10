@@ -1,16 +1,22 @@
 # Usa la imagen oficial de Microsoft SQL Server 2022
 FROM mcr.microsoft.com/mssql/server:2022-latest
 
-# Instala dependencias necesarias (envsubst está en gettext)
+# Cambia temporalmente a root para instalar dependencias
+USER root
+
+# Instala gettext (para envsubst) como root
 RUN apt-get update && \
     apt-get install -y gettext && \
     rm -rf /var/lib/apt/lists/*
 
-# Variables de configuración
+# Vuelve al usuario mssql
+USER mssql
+
+# Variables de configuración (sin credenciales)
 ENV ACCEPT_EULA=Y
 ENV MSSQL_PID=Express
 
-# Copia solo los archivos que necesitas
+# Copia los archivos con permisos adecuados
 COPY --chmod=755 entrypoint.sh /usr/local/bin/
 COPY --chmod=644 init.template.sql /usr/local/bin/
 
