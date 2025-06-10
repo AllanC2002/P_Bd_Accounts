@@ -20,6 +20,6 @@ COPY --chown=mssql --chmod=755 entrypoint.sh /sqlscripts/
 
 WORKDIR /sqlscripts
 
-EXPOSE 1433
+EXPOSE 1434
 
 ENTRYPOINT ["/sqlscripts/entrypoint.sh"]
