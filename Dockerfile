@@ -6,20 +6,19 @@ RUN apt-get update && \
     apt-get install -y gettext && \
     rm -rf /var/lib/apt/lists/*
 
-# Solo variables de configuración (no credenciales)
+# Variables de configuración
 ENV ACCEPT_EULA=Y
 ENV MSSQL_PID=Express
 
-# Copia los archivos con permisos adecuados
+# Copia solo los archivos que necesitas
 COPY --chmod=755 entrypoint.sh /usr/local/bin/
 COPY --chmod=644 init.template.sql /usr/local/bin/
-COPY --chmod=755 wait /usr/local/bin/
 
 # Directorio de trabajo
 WORKDIR /usr/local/bin
 
 # Puerto expuesto
-EXPOSE 1433
+EXPOSE 1434
 
 # Punto de entrada
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
