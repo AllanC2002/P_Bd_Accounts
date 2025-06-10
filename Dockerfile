@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/mssql/server:2022-latest
 
 ENV ACCEPT_EULA=Y
+ENV SA_PASSWORD=TuPasswordSegura123
 
-COPY --chmod=755 entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+COPY init.template.sql /init.template.sql
 
-COPY --chmod=644 init.template.sql /init.sql
+RUN chmod +x /entrypoint.sh
 
-EXPOSE 1434
-
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

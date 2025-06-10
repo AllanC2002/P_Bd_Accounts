@@ -20,7 +20,7 @@ echo "⏳ Esperando a que SQL Server se inicialice..."
 
 until /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; do
   echo "⏳ SQL Server no está listo aún, esperando 5 segundos..."
-  sleep 5
+  sleep 20
 done
 
 echo "✅ SQL Server está listo."
