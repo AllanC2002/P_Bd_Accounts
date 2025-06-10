@@ -1,33 +1,33 @@
 #!/bin/bash
 
-# Verificar variables necesarias
+# Verificar variables
 if [[ -z "$MSSQL_SA_PASSWORD" || -z "$APP_USER_NAME" || -z "$APP_USER_PASSWORD" ]]; then
-  echo "  - Chrashed: the system needs this variables:"
-  echo "  - MSSQL_SA_PASSWORD"
-  echo "  - APP_USER_NAME"
-  echo "  - APP_USER_PASSWORD"
+  echo "Error: Missing required environment variables" >&2
   exit 1
 fi
 
-# Reemplazar variables en la plantilla SQL
-envsubst < /init.template.sql > /init.sql
+# Ruta al directorio con permisos
+SCRIPT_DIR="/sqlscripts"
+
+# Generar script SQL final
+envsubst < "$SCRIPT_DIR/init.template.sql" > "$SCRIPT_DIR/init.sql"
 
 # Iniciar SQL Server en segundo plano
 /opt/mssql/bin/sqlservr &
 
-# Esperar que SQL Server esté listo con un bucle
-echo "⏳ Esperando a que SQL Server se inicialice..."
-
-until /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; do
-  echo "⏳ SQL Server no está listo aún, esperando 5 segundos..."
-  sleep 20
+# Esperar inicialización
+echo "⏳ Waiting for SQL Server to start..."
+for i in {1..30}; do
+  if /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" &> /dev/null; then
+    break
+  fi
+  echo "⏳ Not ready yet (attempt $i/30), waiting 5s..."
+  sleep 5
 done
 
-echo "✅ SQL Server está listo."
+# Ejecutar script
+echo "✅ SQL Server ready. Running initialization script..."
+/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -i "$SCRIPT_DIR/init.sql"
 
-# Ejecutar el script SQL para crear DB, usuario, tablas, etc.
-echo "Ejecutando script de inicialización..."
-/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -i /init.sql
-
-# Mantener el contenedor activo (esperar a que sqlservr termine)
-/wait
+# Mantener contenedor activo
+wait
