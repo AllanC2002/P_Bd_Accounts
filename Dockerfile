@@ -5,4 +5,6 @@ ENV ACCEPT_EULA=Y
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 COPY init.template.sql /init.template.sql
 
+EXPOSE 1434
+
 CMD ["/entrypoint.sh"]
