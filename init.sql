@@ -6,3 +6,7 @@ CREATE TABLE Users (
     Password NVARCHAR(100),
     Status INT CHECK (Status IN (0, 1))
 );
+
+CREATE USER 'ascd1'@'%' IDENTIFIED WITH mysql_native_password BY '1716983349';
+GRANT ALL PRIVILEGES ON *.* TO 'ascd1'@'%';
+FLUSH PRIVILEGES;
