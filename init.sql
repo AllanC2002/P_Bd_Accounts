@@ -1,4 +1,4 @@
-CREATE TABLE Users (
+CREATE TABLE users (
     Id_User INT AUTO_INCREMENT PRIMARY KEY,
     Name NVARCHAR(100),
     Lastname NVARCHAR(100),
