@@ -111,15 +111,15 @@ jobs:
             username: ubuntu
             key: ${{ secrets.EC2_PEM }}
             script: |
-              docker stop container_bduserprofile || true
-              docker rm container_bduserprofile || true
+              docker stop container_bdaccounts || true
+              docker rm container_bdaccounts || true
               docker rmi ${{ secrets.DOCKER_REPO }}:qa || true
 
               docker pull ${{ secrets.DOCKER_REPO }}:qa
 
               docker run -d \
                 --restart always \
-                --name container_bduserprofile \
+                --name container_bdaccounts \
                 -p 3306:3306 \
                 -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSROOT }} \
                 -e MYSQL_DATABASE=${{ secrets.MYSQL_DB }} \
