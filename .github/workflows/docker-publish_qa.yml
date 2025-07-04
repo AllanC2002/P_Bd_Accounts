@@ -1,12 +1,12 @@
-name: Docker Publish Production
+name: Docker
 on:
   schedule:
     - cron: '35 18 * * *'
   push:
-    branches: [ "main" ]
+    branches: [ "qa" ]
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "qa" ]
 
 env:
   REGISTRY: docker.io
@@ -25,7 +25,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
@@ -37,7 +36,7 @@ jobs:
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d 
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -45,13 +44,13 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         id: build-and-push
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
@@ -63,15 +62,13 @@ jobs:
       - name: Sign the published Docker image
         if: ${{ github.event_name != 'pull_request' }}
         env:
-
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
-
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
 
   deploy:
-      name: main mysql Accounts
+      name: qa mysql
       needs: build
       runs-on: ubuntu-latest
 
@@ -79,15 +76,15 @@ jobs:
         - name: Deploy EC2
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.EC2_IP_PROD }}
+            host: ${{ secrets.EC2_IP }}
             username: ubuntu
-            key: ${{ secrets.EC2_PEM_PROD }}
+            key: ${{ secrets.EC2_PEM }}
             script: |
               docker stop container_bdaccounts || true
               docker rm container_bdaccounts || true
-              docker rmi ${{ secrets.DOCKER_REPO }}:main || true
+              docker rmi ${{ secrets.DOCKER_REPO }}:qa || true
 
-              docker pull ${{ secrets.DOCKER_REPO }}:main
+              docker pull ${{ secrets.DOCKER_REPO }}:qa
 
               docker run -d \
                 --restart always \
@@ -95,4 +92,4 @@ jobs:
                 -p 3306:3306 \
                 -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSROOT }} \
                 -e MYSQL_DATABASE=${{ secrets.MYSQL_DB }} \
-                ${{ secrets.DOCKER_REPO }}:main
+                ${{ secrets.DOCKER_REPO }}:qa
